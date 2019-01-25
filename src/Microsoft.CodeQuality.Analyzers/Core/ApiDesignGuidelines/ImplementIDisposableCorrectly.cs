@@ -182,9 +182,11 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
 
             private void AnalyzeNamedTypeSymbol(SymbolAnalysisContext context)
             {
+                // Note all the descriptors/rules for this analyzer have the same ID and category and hence
+                // will always have identical configured visibility.
                 if (context.Symbol is INamedTypeSymbol type &&
                     type.TypeKind == TypeKind.Class &&
-                    type.IsExternallyVisible())
+                    type.MatchesConfiguredVisibility(context.Options, IDisposableReimplementationRule, context.CancellationToken))
                 {
                     bool implementsDisposableInBaseType = ImplementsDisposableInBaseType(type);
 
@@ -242,9 +244,11 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
                 bool isDisposeMethod = method.Name == DisposeMethodName;
                 if (isFinalizerMethod || isDisposeMethod)
                 {
+                    // Note all the descriptors/rules for this analyzer have the same ID and category and hence
+                    // will always have identical configured visibility.
                     INamedTypeSymbol type = method.ContainingType;
                     if (type != null && type.TypeKind == TypeKind.Class &&
-                        !type.IsSealed && type.IsExternallyVisible())
+                        !type.IsSealed && type.MatchesConfiguredVisibility(context.Options, IDisposableReimplementationRule, context.CancellationToken))
                     {
                         if (ImplementsDisposableDirectly(type))
                         {
@@ -496,7 +500,7 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
         /// <summary>
         /// Validates implementation of Dispose method. The method must call Dispose(true) and then GC.SuppressFinalize(this).
         /// </summary>
-        private struct DisposeImplementationValidator
+        private sealed class DisposeImplementationValidator
         {
             // this type will be created per compilation
             // this is actually a bug - https://github.com/dotnet/roslyn-analyzers/issues/845
@@ -522,7 +526,7 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
 
                 if (ValidateOperations(operations))
                 {
-                    return _callsDisposeBool && _callsSuppressFinalize;
+                    return _callsDisposeBool && (_callsSuppressFinalize || !_type.HasFinalizer());
                 }
 
                 return false;
@@ -628,7 +632,7 @@ namespace Microsoft.CodeQuality.Analyzers.ApiDesignGuidelines
         /// <summary>
         /// Validates implementation of the finalizer. This method must call Dispose(false) and then return
         /// </summary>
-        private struct FinalizeImplementationValidator
+        private sealed class FinalizeImplementationValidator
         {
             // Avoid storing per-compilation data into the fields of a diagnostic analyzer.
             // this is actually a bug - https://github.com/dotnet/roslyn-analyzers/issues/845

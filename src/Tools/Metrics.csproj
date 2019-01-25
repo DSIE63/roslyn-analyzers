@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net46</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <IsShipping>false</IsShipping>
+    <IsShipping>true</IsShipping>
   </PropertyGroup>
   <Import Project="..\Utilities\Analyzer.Utilities.projitems" Label="Shared" />
   <ItemGroup>

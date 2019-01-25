@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
 namespace Analyzer.Utilities
@@ -7,6 +8,7 @@ namespace Analyzer.Utilities
     internal static class WellKnownTypes
     {
         public const string SystemSecurityCryptographyCipherMode = "System.Security.Cryptography.CipherMode";
+        public const string SystemNetSecurityRemoteCertificateValidationCallback = "System.Net.Security.RemoteCertificateValidationCallback";
 
         public static INamedTypeSymbol ICollection(Compilation compilation)
         {
@@ -293,6 +295,21 @@ namespace Analyzer.Utilities
             return compilation.GetSpecialType(SpecialType.System_Object);
         }
 
+        public static INamedTypeSymbol X509Certificate(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Security.Cryptography.X509Certificates.X509Certificate");
+        }
+
+        public static INamedTypeSymbol X509Chain(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Security.Cryptography.X509Certificates.X509Chain");
+        }
+
+        public static INamedTypeSymbol SslPolicyErrors(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Net.Security.SslPolicyErrors");
+        }
+
         public static INamedTypeSymbol Exception(Compilation compilation)
         {
             return compilation.GetTypeByMetadataName("System.Exception");
@@ -315,7 +332,7 @@ namespace Analyzer.Utilities
 
         public static INamedTypeSymbol KeyNotFoundException(Compilation compilation)
         {
-            return compilation.GetTypeByMetadataName("System.KeyNotFoundException");
+            return compilation.GetTypeByMetadataName(typeof(System.Collections.Generic.KeyNotFoundException).FullName);
         }
 
         public static INamedTypeSymbol GenericIEqualityComparer(Compilation compilation)
@@ -461,6 +478,51 @@ namespace Analyzer.Utilities
         public static INamedTypeSymbol HttpVerbs(Compilation compilation)
         {
             return compilation.GetTypeByMetadataName("System.Web.Mvc.HttpVerbs");
+        }
+
+        public static INamedTypeSymbol IImmutableDictionary(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Collections.Immutable.IImmutableDictionary`2");
+        }
+
+        public static INamedTypeSymbol IImmutableList(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Collections.Immutable.IImmutableList`1");
+        }
+
+        public static INamedTypeSymbol IImmutableQueue(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Collections.Immutable.IImmutableQueue`1");
+        }
+
+        public static INamedTypeSymbol IImmutableSet(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Collections.Immutable.IImmutableSet`1");
+        }
+
+        public static INamedTypeSymbol IImmutableStack(Compilation compilation)
+        {
+            return compilation.GetTypeByMetadataName("System.Collections.Immutable.IImmutableStack`1");
+        }
+
+        public static ImmutableHashSet<INamedTypeSymbol> IImmutableInterfaces(Compilation compilation)
+        {
+            var builder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>();
+            AddIfNotNull(IImmutableDictionary(compilation));
+            AddIfNotNull(IImmutableList(compilation));
+            AddIfNotNull(IImmutableQueue(compilation));
+            AddIfNotNull(IImmutableSet(compilation));
+            AddIfNotNull(IImmutableStack(compilation));
+            return builder.ToImmutable();
+
+            // Local functions.
+            void AddIfNotNull(INamedTypeSymbol type)
+            {
+                if (type != null)
+                {
+                    builder.Add(type);
+                }
+            }
         }
 
         #region Test Framework Types
